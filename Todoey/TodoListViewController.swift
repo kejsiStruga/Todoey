@@ -12,11 +12,18 @@ class TodoListViewController: UITableViewController {
 
     // table view controller in story board => dont need to link any outlets or set data source or delegates etc , all is setup
     
-    let itemArray = ["To Do 1", "To Do2", "To Do 3"]
+    var itemArray = ["To Do 1", "To Do2", "To Do 3"]
+    
+    // user def is saved in the plist file hence dictionary!
+    let userDefaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        if let items = userDefaults.array(forKey: "ToDoListArray") {
+            itemArray = items as! [String]
+        }
+        
     }
     
     // TableView DataSource Methods! - how many rows to return and what the cells should display
@@ -54,6 +61,36 @@ class TodoListViewController: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
 
     }
+    
+    //MARK - Add ne items
+    @IBAction func addBtn(_ sender: UIBarButtonItem) {
+        
+        var textField = UITextField();
+        
+        // A UI alert with a field that lets for insertion of new todos
+        let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
+        
+        let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
+            
+            self.itemArray.append(textField.text!)
+            
+            // save the upadated array in the userdef
+            self.userDefaults.set(self.itemArray, forKey: "ToDoListArray")
+            
+            self.tableView.reloadData()
+        }
+        
+        alert.addTextField { (alertTextField) in // closure
+            alertTextField.placeholder = "Create new item"
+            textField = alertTextField
+            
+        }
+        
+        alert.addAction(action)
+        present(alert, animated: true, completion: nil)
+        
+    }
+    
     
 }
 
