@@ -8,40 +8,58 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
 
     let realm = try! Realm()
     
    // var categories = [Category]()
     
     // Realm returns a Results Type when we read data
-    var categories: Results<Category>?
+    var categories: Results<Category>? // Collection of Results
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         loadCategories()
-        
     }
     
-    //MARK: - TableView DAtaSource Methods
+    //MARK: - TableView DataSource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // if categories is not nil return count else(??) return 1 => Nil coalescing operator
         return categories?.count ?? 1
     }
     
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "categoryCell", for: indexPath)
+
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-        cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added Yet"
+        // we change the color of the cell where we create the cell!
         
+        if let category = categories?[indexPath.row] {
+            
+            guard let categoryColor = UIColor(hexString: category.categoryUIColor) else {fatalError()}
+            
+            cell.textLabel?.text = category.name
+                //categories?[indexPath.row].name ?? "No Categories Added Yet"
+            
+            cell.backgroundColor = categoryColor
+            
+            cell.textLabel?.textColor = ContrastColorOf(categoryColor, returnFlat: true)
+            
+        }
+        else {
+            cell.textLabel?.text = "No Categories Added Yet"
+            
+        }
         return cell
     }
     
     
-    //MARK: - TAbleView Delegate Methods
+    //MARK: - TableView Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: "goToItems", sender: self)
@@ -59,7 +77,6 @@ class CategoryViewController: UITableViewController {
     //MARK: - Data Manipulation Methods
     
     func save(category: Category) {
-        
         do {
             try realm.write {
                 realm.add(category)
@@ -68,6 +85,21 @@ class CategoryViewController: UITableViewController {
             print ("Error saving category \(error)")
         }
         tableView.reloadData()
+    }
+    
+    //MARK: - Delete data
+    override func updateModel(at indexPath: IndexPath) {
+        super.updateModel(at: indexPath)
+        
+        if let categoryForDeletion = self.categories?[indexPath.row] {
+            do {
+                try self.realm.write {
+                    self.realm.delete(categoryForDeletion)
+                }
+            } catch {
+                print("Error deleting category, \(error)")
+            }
+        }
     }
     
     //MARK: - Add New Categories
@@ -81,7 +113,7 @@ class CategoryViewController: UITableViewController {
             
             let newCategory = Category()
             newCategory.name = textField.text!
-            //            self.categories.append(newCategory); we dont need this! because realm autoupdates
+            newCategory.categoryUIColor = UIColor.randomFlat.hexValue()
             self.save(category: newCategory)
         }
         
@@ -96,17 +128,11 @@ class CategoryViewController: UITableViewController {
     
     func loadCategories () {
         
-         categories = realm.objects(Category.self) // all items from realm which have the Category type ^^
+        categories = realm.objects(Category.self) // all items from realm which have the Category type ^^
         
-//        let request : NSFetchRequest<Category> = Category.fetchRequest()
-//
-//        do {
-//           categories = try context.fetch(request)
-//        } catch {
-//            print("Error loading categories \(error)")
-//        }
         tableView.reloadData()
         
     }
     
 }
+

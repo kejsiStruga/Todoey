@@ -18,6 +18,7 @@ class Item: Object {
     @objc dynamic var title: String = ""
     @objc dynamic var done: Bool = false
     @objc dynamic var dateCreated: Date?
+    @objc dynamic var itemUIColor: String = ""
     // LinkingObjects are the inverse realtionship, and are autoupdating container type that represent 0-n objects
     // which are linked to its owning model throgh a relationship
     var parentCategory = LinkingObjects(fromType: Category.self, property: "items")
